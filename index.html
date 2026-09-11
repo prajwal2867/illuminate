@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skill Space Login</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="modal-backdrop">
+    <div class="login-modal-card" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+      <button class="modal-close" data-action="close-modal" aria-label="Close modal">&times;</button>
+      <h2 class="login-modal-title">Log in to Skill Space</h2>
+      <p class="auth-message empty" aria-live="polite" style="margin-bottom:12px; text-align:center;"></p>
+      <form id="authForm">
+        <div class="skool-field-container">
+          <label class="skool-floating-label">Email</label>
+          <input type="email" name="email" id="modalEmail" class="skool-input" required placeholder="">
+        </div>
+        <div class="skool-field-container">
+          <label class="skool-floating-label">Password</label>
+          <input type="password" name="password" id="modalPassword" class="skool-input" required placeholder="">
+        </div>
+        <div class="login-sublinks-row">
+          <button type="button" class="SkillSpace-link" data-auth="forgot">Forgot password?</button>
+          <button type="button" class="SkillSpace-link" data-auth="login">Log in with a code</button>
+        </div>
+        <button type="submit" class="SkillSpace-btn-primary">LOG IN</button>
+        <div class="login-modal-footer">
+          Don’t have an account? <button type="button" class="SkillSpace-link" data-auth="register">Sign up for free</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
