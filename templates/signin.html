@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Illuminate Sign In</title>
+  <link rel="stylesheet" href="{{ url_for('static_styles') }}">
+</head>
+<body>
+  <main class="page-shell signin-page-shell">
+    <section class="registration-card signin-card" role="dialog" aria-modal="true" aria-labelledby="signin-title">
+      <button class="modal-close" type="button" aria-label="Close sign in" onclick="window.location.href='/'">&times;</button>
+      <h1 id="signin-title">Illuminate Sign In</h1>
+
+      {% if message %}
+        <p class="signin-message {{ message_type }}" role="alert">{{ message }}</p>
+      {% endif %}
+
+      <form class="registration-form" method="post" action="{{ url_for('signin_page') }}">
+        <label class="field">
+          <span>Full Name</span>
+          <input type="text" name="full-name" autocomplete="name" required>
+        </label>
+
+        <label class="field input-with-icon">
+          <span>Password</span>
+          <input type="password" name="password" autocomplete="current-password" required>
+          <button class="visibility-toggle" type="button" aria-label="Show password">&#128065;</button>
+        </label>
+
+        <button class="register-button signin-button" type="submit">View your Unique QR E-Ticket</button>
+      </form>
+    </section>
+  </main>
+  <script>
+    document.querySelector('.visibility-toggle').addEventListener('click', (event) => {
+      const password = event.currentTarget.previousElementSibling;
+      const isPassword = password.type === 'password';
+      password.type = isPassword ? 'text' : 'password';
+      event.currentTarget.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+    });
+  </script>
+</body>
+</html>

@@ -63,6 +63,14 @@ def hash_password(password: str) -> str:
     return f"{salt.hex()}:{digest.hex()}"
 
 
+def verify_password(password: str, stored_hash: str) -> bool:
+    salt_hex, digest_hex = stored_hash.split(":", 1)
+    candidate_digest = hashlib.pbkdf2_hmac(
+        "sha256", password.encode(), bytes.fromhex(salt_hex), 240_000
+    )
+    return secrets.compare_digest(candidate_digest.hex(), digest_hex)
+
+
 @app.get("/")
 def registration_page():
     return send_from_directory(BASE_DIR, "index.html")
@@ -136,6 +144,43 @@ def generate_ticket():
         )
 
     return redirect(url_for("ticket_page", ticket_id=ticket_id))
+
+
+@app.route("/signin", methods=["GET", "POST"])
+def signin_page():
+    message = None
+    message_type = None
+
+    if request.method == "POST":
+        full_name = request.form.get("full-name", "").strip()
+        password = request.form.get("password", "")
+
+        with get_connection() as connection:
+            ticket = connection.execute(
+                """
+                SELECT ticket_id, password_hash
+                FROM tickets
+                WHERE lower(full_name) = lower(?)
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (full_name,),
+            ).fetchone()
+
+        if ticket is None:
+            message = "No such details were found, register using valid illuminate details."
+            message_type = "warning"
+        elif not verify_password(password, ticket["password_hash"]):
+            message = "The details were incorrect, try again."
+            message_type = "error"
+        else:
+            return redirect(url_for("ticket_page", ticket_id=ticket["ticket_id"]))
+
+    return render_template(
+        "signin.html",
+        message=message,
+        message_type=message_type,
+    )
 
 
 @app.get("/ticket/<ticket_id>")

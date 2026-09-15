@@ -254,6 +254,47 @@ body {
   text-decoration: underline;
 }
 
+.signin-page-shell {
+  padding: 28px 16px;
+}
+
+.signin-card {
+  width: min(100%, 470px);
+  padding-bottom: 38px;
+}
+
+.signin-card h1 {
+  margin-bottom: 30px;
+}
+
+.signin-message {
+  margin: -8px 0 22px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.signin-message.error {
+  border: 1px solid #e0a1a1;
+  background: #fff0f0;
+  color: #c62828;
+}
+
+.signin-message.warning {
+  border: 1px solid #e0c46b;
+  background: #fff8dc;
+  color: #8a6500;
+}
+
+.signin-button {
+  height: auto;
+  min-height: 53px;
+  padding: 12px 20px;
+  line-height: 1.25;
+}
+
 .ticket-page-shell {
   padding: 28px 16px;
 }
