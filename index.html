@@ -3,34 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Skill Space Login</title>
+  <title>Illuminate Registration</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="modal-backdrop">
-    <div class="login-modal-card" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
-      <button class="modal-close" data-action="close-modal" aria-label="Close modal">&times;</button>
-      <h2 class="login-modal-title">Log in to Skill Space</h2>
-      <p class="auth-message empty" aria-live="polite" style="margin-bottom:12px; text-align:center;"></p>
-      <form id="authForm">
-        <div class="skool-field-container">
-          <label class="skool-floating-label">Email</label>
-          <input type="email" name="email" id="modalEmail" class="skool-input" required placeholder="">
+  <main class="page-shell">
+    <section class="registration-card" role="dialog" aria-modal="true" aria-labelledby="registration-title">
+      <button class="modal-close" type="button" aria-label="Close registration">&times;</button>
+      <h1 id="registration-title">Illuminate Registration</h1>
+
+      <form class="registration-form">
+        <label class="field">
+          <span>Full Name</span>
+          <input type="text" name="full-name" autocomplete="name" required>
+        </label>
+
+        <label class="field">
+          <span>Email Address</span>
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+
+        <div class="field phone-field">
+          <label for="mobile-number">Mobile Number</label>
+          <div class="phone-input">
+            <button class="country-selector" type="button" aria-label="Select country code">
+              <img class="country-flag" src="India_flag.png" alt="India">
+              <span class="country-chevron" aria-hidden="true"></span>
+            </button>
+            <input id="mobile-number" type="tel" name="mobile-number" autocomplete="tel" required>
+          </div>
         </div>
-        <div class="skool-field-container">
-          <label class="skool-floating-label">Password</label>
-          <input type="password" name="password" id="modalPassword" class="skool-input" required placeholder="">
-        </div>
-        <div class="login-sublinks-row">
-          <button type="button" class="SkillSpace-link" data-auth="forgot">Forgot password?</button>
-          <button type="button" class="SkillSpace-link" data-auth="login">Log in with a code</button>
-        </div>
-        <button type="submit" class="SkillSpace-btn-primary">LOG IN</button>
-        <div class="login-modal-footer">
-          Don’t have an account? <button type="button" class="SkillSpace-link" data-auth="register">Sign up for free</button>
-        </div>
+
+        <label class="field">
+          <span>Enter illuminate ID</span>
+          <input type="text" name="illuminate-id" required>
+        </label>
+
+        <label class="field input-with-icon">
+          <span>Create Password</span>
+          <input type="password" name="password" autocomplete="new-password" required>
+          <button class="visibility-toggle" type="button" aria-label="Show password">&#128065;</button>
+        </label>
+
+        <label class="field input-with-icon">
+          <span>Confirm Password</span>
+          <input type="password" name="confirm-password" autocomplete="new-password" required>
+          <button class="visibility-toggle" type="button" aria-label="Show password">&#128065;</button>
+        </label>
+
+        <label class="field date-field">
+          <span>Date of Birth</span>
+          <input type="date" name="date-of-birth" required>
+        </label>
+
+        <button class="register-button" type="submit">REGISTER</button>
       </form>
-    </div>
-  </div>
+
+      <p class="signin-prompt">Already have an Illuminate ID? <a href="#signin">Sign in here</a></p>
+    </section>
+  </main>
 </body>
 </html>
