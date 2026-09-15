@@ -3,17 +3,211 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Illuminate Admin</title>
+  <title>Illuminate Admin Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static_styles') }}">
+  <script src="https://unpkg.com/html5-qrcode" defer></script>
 </head>
 <body>
-  <main class="page-shell signin-page-shell">
-    <section class="registration-card signin-card admin-card" role="main" aria-labelledby="admin-welcome-title">
-      <button class="modal-close" type="button" aria-label="Close admin page" onclick="window.location.href='/'">&times;</button>
-      <h1 id="admin-welcome-title">Illuminate Admin</h1>
-      <p class="admin-welcome">Welcome, <strong>{{ admin_name }}</strong></p>
-      <a class="register-button signin-button admin-home-button" href="{{ url_for('registration_page') }}">BACK TO HOMEPAGE</a>
+  <main class="dashboard-shell">
+    <header class="dashboard-header">
+      <div>
+        <h1>Welcome! {{ admin_name }}</h1>
+      </div>
+      <a class="dashboard-exit" href="{{ url_for('registration_page') }}">Exit</a>
+    </header>
+
+    <nav class="dashboard-tabs" aria-label="Admin dashboard views">
+      <button class="dashboard-tab active" type="button" data-view="database">Database</button>
+      <button class="dashboard-tab" type="button" data-view="scanner">Scanner</button>
+      <button class="dashboard-tab" type="button" data-view="attendees">View Attendees</button>
+    </nav>
+
+    <section class="dashboard-view active" id="database-view" data-view-panel="database">
+      <div class="view-heading">
+        <div>
+          <p class="dashboard-kicker">Registered users</p>
+          <h2>Database</h2>
+        </div>
+        <span class="record-count" id="database-count">0 records</span>
+      </div>
+      <div class="database-controls">
+        <label>
+          <span>Filter by</span>
+          <select id="database-filter">
+            <option value="full_name">Full Name</option>
+            <option value="email">Email Address</option>
+            <option value="mobile_number">Mobile Number</option>
+            <option value="illuminate_id">Illuminate ID</option>
+          </select>
+        </label>
+        <label class="search-control">
+          <span>Search</span>
+          <input id="database-search" type="search" placeholder="Search selected field...">
+        </label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Full Name</th>
+              <th>Email Address</th>
+              <th>Mobile Number</th>
+              <th>Illuminate ID</th>
+              <th>Password</th>
+              <th>Date of Birth</th>
+              <th>Generated QR Code</th>
+            </tr>
+          </thead>
+          <tbody id="database-rows"></tbody>
+        </table>
+      </div>
+      <p class="empty-state" id="database-empty">No registered users found.</p>
+    </section>
+
+    <section class="dashboard-view" id="scanner-view" data-view-panel="scanner">
+      <div class="view-heading">
+        <div>
+          <p class="dashboard-kicker">Attendance verification</p>
+          <h2>QR Scanner</h2>
+        </div>
+      </div>
+      <div class="scanner-layout">
+        <div class="scanner-panel">
+          <div id="qr-reader"></div>
+          <button class="scanner-button" id="start-scanner" type="button">START CAMERA</button>
+        </div>
+        <div class="scanner-copy">
+          <h3>Scan a user ticket</h3>
+          <p>Scan a generated Illuminate QR code to verify it and move the user into View Attendees.</p>
+          <p class="scanner-status" id="scanner-status" role="status">Camera is ready when you are.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-view" id="attendees-view" data-view-panel="attendees">
+      <div class="view-heading">
+        <div>
+          <p class="dashboard-kicker">Verified entries</p>
+          <h2>View Attendees</h2>
+        </div>
+        <span class="record-count" id="attendees-count">0 records</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Full Name</th>
+              <th>Email Address</th>
+              <th>Mobile Number</th>
+              <th>Illuminate ID</th>
+              <th>Password</th>
+              <th>Date of Birth</th>
+              <th>Generated QR Code</th>
+            </tr>
+          </thead>
+          <tbody id="attendees-rows"></tbody>
+        </table>
+      </div>
+      <p class="empty-state" id="attendees-empty">No attendees have been verified yet.</p>
     </section>
   </main>
+
+  <script>
+    const tabs = document.querySelectorAll('.dashboard-tab');
+    const panels = document.querySelectorAll('[data-view-panel]');
+    let scanner = null;
+
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;'
+    }[character]));
+
+    const rowMarkup = (record) => `
+      <tr>
+        <td>${escapeHtml(record.full_name)}</td>
+        <td>${escapeHtml(record.email)}</td>
+        <td>${escapeHtml(record.mobile_number)}</td>
+        <td>${escapeHtml(record.illuminate_id)}</td>
+        <td><span class="protected-value">Protected</span></td>
+        <td>${escapeHtml(record.date_of_birth)}</td>
+        <td><a class="qr-link" href="/generated_qr/${encodeURIComponent(record.qr_filename)}" target="_blank">View QR</a></td>
+      </tr>`;
+
+    const loadRecords = async (endpoint, rowsId, countId, emptyId) => {
+      const response = await fetch(endpoint);
+      const payload = await response.json();
+      const rows = document.querySelector(`#${rowsId}`);
+      rows.innerHTML = payload.records.map(rowMarkup).join('');
+      document.querySelector(`#${countId}`).textContent = `${payload.records.length} record${payload.records.length === 1 ? '' : 's'}`;
+      document.querySelector(`#${emptyId}`).hidden = payload.records.length !== 0;
+    };
+
+    const loadDatabase = () => {
+      const filter = document.querySelector('#database-filter').value;
+      const search = encodeURIComponent(document.querySelector('#database-search').value);
+      return loadRecords(`/admin/database?filter=${filter}&search=${search}`, 'database-rows', 'database-count', 'database-empty');
+    };
+
+    const loadAttendees = () => loadRecords('/admin/attendees', 'attendees-rows', 'attendees-count', 'attendees-empty');
+
+    const stopScanner = async () => {
+      if (scanner) {
+        await scanner.stop().catch(() => {});
+        scanner.clear();
+        scanner = null;
+      }
+    };
+
+    const showView = async (view) => {
+      tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.view === view));
+      panels.forEach((panel) => panel.classList.toggle('active', panel.dataset.viewPanel === view));
+      if (view !== 'scanner') await stopScanner();
+      if (view === 'database') await loadDatabase();
+      if (view === 'attendees') await loadAttendees();
+    };
+
+    tabs.forEach((tab) => tab.addEventListener('click', () => showView(tab.dataset.view)));
+    document.querySelector('#database-filter').addEventListener('change', loadDatabase);
+    document.querySelector('#database-search').addEventListener('input', loadDatabase);
+    loadDatabase();
+    loadAttendees();
+
+    document.querySelector('#start-scanner').addEventListener('click', async () => {
+      const status = document.querySelector('#scanner-status');
+      const button = document.querySelector('#start-scanner');
+      if (!window.Html5Qrcode) {
+        status.textContent = 'Scanner library is still loading. Try again in a moment.';
+        return;
+      }
+      await stopScanner();
+      scanner = new Html5Qrcode('qr-reader');
+      button.disabled = true;
+      status.textContent = 'Point the camera at an Illuminate QR code.';
+      await scanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 230, height: 230 } },
+        async (decodedText) => {
+          await stopScanner();
+          const response = await fetch('/admin/scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ qr_value: decodedText })
+          });
+          const result = await response.json();
+          status.textContent = result.message;
+          status.className = `scanner-status ${result.success ? 'success' : 'error'}`;
+          button.disabled = false;
+          if (result.success) {
+            await loadDatabase();
+            await loadAttendees();
+          }
+        },
+        () => {}
+      ).catch(() => {
+        status.textContent = 'Camera access was unavailable. Check browser permission and try again.';
+        status.className = 'scanner-status error';
+        button.disabled = false;
+      });
+    });
+  </script>
 </body>
 </html>

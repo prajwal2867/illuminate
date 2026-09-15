@@ -6,6 +6,7 @@ import secrets
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 import qrcode
 from flask import Flask, abort, redirect, render_template, request, send_from_directory, url_for
@@ -56,6 +57,23 @@ def initialize_database() -> None:
                 date_of_birth TEXT NOT NULL,
                 qr_filename TEXT NOT NULL,
                 created_at TEXT NOT NULL
+            )
+            """
+        )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS attendees (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ticket_id TEXT NOT NULL UNIQUE,
+                full_name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                mobile_number TEXT NOT NULL,
+                illuminate_id TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                date_of_birth TEXT NOT NULL,
+                qr_filename TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                scanned_at TEXT NOT NULL
             )
             """
         )
@@ -133,6 +151,88 @@ def admin_login():
         message = "The admin name or assigned code is incorrect, try again."
 
     return render_template("admin_login.html", message=message)
+
+
+def ticket_row_for_display(row: sqlite3.Row) -> dict:
+    return {
+        "full_name": row["full_name"],
+        "email": row["email"],
+        "mobile_number": row["mobile_number"],
+        "illuminate_id": row["illuminate_id"],
+        "password": "Protected",
+        "date_of_birth": row["date_of_birth"],
+        "qr_filename": row["qr_filename"],
+    }
+
+
+@app.get("/admin/database")
+def admin_database():
+    filter_by = request.args.get("filter", "full_name")
+    search = request.args.get("search", "").strip()
+    allowed_filters = {
+        "full_name": "full_name",
+        "email": "email",
+        "mobile_number": "mobile_number",
+        "illuminate_id": "illuminate_id",
+    }
+    column = allowed_filters.get(filter_by, "full_name")
+
+    with get_connection() as connection:
+        if search:
+            rows = connection.execute(
+                f"SELECT * FROM tickets WHERE lower({column}) LIKE lower(?) ORDER BY id DESC",
+                (f"%{search}%",),
+            ).fetchall()
+        else:
+            rows = connection.execute("SELECT * FROM tickets ORDER BY id DESC").fetchall()
+
+    return {"records": [ticket_row_for_display(row) for row in rows]}
+
+
+@app.get("/admin/attendees")
+def admin_attendees():
+    with get_connection() as connection:
+        rows = connection.execute("SELECT * FROM attendees ORDER BY id DESC").fetchall()
+
+    return {"records": [ticket_row_for_display(row) for row in rows]}
+
+
+@app.post("/admin/scan")
+def admin_scan():
+    payload = request.get_json(silent=True) or {}
+    qr_value = str(payload.get("qr_value", "")).strip()
+    parsed_path = urlparse(qr_value).path
+    match = re.fullmatch(r"/ticket/([^/]+)", parsed_path)
+    ticket_id = match.group(1) if match else qr_value.rsplit("/", 1)[-1]
+
+    if not ticket_id:
+        return {"success": False, "message": "Invalid QR code."}, 400
+
+    with get_connection() as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        ticket = connection.execute(
+            "SELECT * FROM tickets WHERE ticket_id = ?", (ticket_id,)
+        ).fetchone()
+        if ticket is None:
+            return {"success": False, "message": "QR code is not valid or has already been scanned."}, 404
+
+        scanned_at = datetime.now(timezone.utc).isoformat()
+        connection.execute(
+            """
+            INSERT INTO attendees (
+                ticket_id, full_name, email, mobile_number, illuminate_id,
+                password_hash, date_of_birth, qr_filename, created_at, scanned_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                ticket["ticket_id"], ticket["full_name"], ticket["email"],
+                ticket["mobile_number"], ticket["illuminate_id"], ticket["password_hash"],
+                ticket["date_of_birth"], ticket["qr_filename"], ticket["created_at"], scanned_at,
+            ),
+        )
+        connection.execute("DELETE FROM tickets WHERE ticket_id = ?", (ticket_id,))
+
+    return {"success": True, "message": "QR verified. User moved to attendees.", "record": ticket_row_for_display(ticket)}
 
 
 @app.post("/generate-ticket")
