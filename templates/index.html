@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Illuminate Registration</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="{{ url_for('static_styles') }}" />
 </head>
 <body>
   <main class="page-shell">
@@ -16,7 +16,7 @@
         <p class="registration-message {{ message_type or 'warning' }}" role="alert">{{ message }}</p>
       {% endif %}
 
-      <form class="registration-form" action="/generate-ticket" method="post">
+      <form class="registration-form" action="{{ url_for('generate_ticket') }}" method="post">
         <label class="field">
           <span>Full Name</span>
           <input type="text" name="full-name" autocomplete="name" required>
@@ -31,7 +31,7 @@
           <label for="mobile-number">Mobile Number</label>
           <div class="phone-input">
             <button class="country-selector" type="button" aria-label="Select country code">
-              <img class="country-flag" src="India_flag.png" alt="India">
+              <img class="country-flag" src="{{ url_for('india_flag') }}" alt="India">
               <span class="country-chevron" aria-hidden="true"></span>
             </button>
             <input id="mobile-number" type="tel" name="mobile-number" autocomplete="tel" required>
@@ -66,7 +66,7 @@
         <button class="register-button" type="submit">Verify and Generate E-Ticket</button>
       </form>
 
-      <p class="signin-prompt">Already have an Illuminate ID? <a href="/signin">Sign in here</a></p>
+      <p class="signin-prompt">Already have an Illuminate ID? <a href="{{ url_for('signin_page') }}">Sign in here</a></p>
     </section>
   </main>
   <script>

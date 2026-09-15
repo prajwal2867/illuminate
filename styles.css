@@ -44,6 +44,18 @@ body {
   font-weight: 700;
 }
 
+.registration-message {
+  margin: -8px 0 22px;
+  padding: 12px 14px;
+  border: 1px solid #e0c46b;
+  border-radius: 8px;
+  background: #fff8dc;
+  color: #8a6500;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .modal-close {
   position: absolute;
   top: 25px;

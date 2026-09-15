@@ -42,6 +42,12 @@ def initialize_database() -> None:
             )
             """
         )
+        connection.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_tickets_illuminate_id_unique
+            ON tickets (lower(illuminate_id))
+            """
+        )
 
 
 def normalize_date(value: str) -> str | None:
@@ -73,7 +79,11 @@ def verify_password(password: str, stored_hash: str) -> bool:
 
 @app.get("/")
 def registration_page():
-    return send_from_directory(BASE_DIR, "index.html")
+    return render_template(
+        "index.html",
+        message=request.args.get("message"),
+        message_type=request.args.get("message_type"),
+    )
 
 
 @app.get("/styles.css")
@@ -114,6 +124,26 @@ def generate_ticket():
     if date_of_birth is None:
         return "Enter a valid date of birth in DD / MM / YYYY format.", 400
 
+    with get_connection() as connection:
+        existing_ticket = connection.execute(
+            """
+            SELECT 1
+            FROM tickets
+            WHERE lower(email) = lower(?) OR lower(illuminate_id) = lower(?)
+            LIMIT 1
+            """,
+            (form["email"].strip(), form["illuminate-id"].strip()),
+        ).fetchone()
+
+    if existing_ticket is not None:
+        return redirect(
+            url_for(
+                "registration_page",
+                message="User details already exist, please try to sign in to access your QR code.",
+                message_type="warning",
+            )
+        )
+
     ticket_id = secrets.token_urlsafe(12)
     qr_filename = f"{ticket_id}.png"
     ticket_url = url_for("ticket_page", ticket_id=ticket_id, _external=True)
@@ -122,25 +152,35 @@ def generate_ticket():
     qr_code.make(fit=True)
     qr_code.make_image(fill_color="black", back_color="white").save(QR_DIRECTORY / qr_filename)
 
-    with get_connection() as connection:
-        connection.execute(
-            """
-            INSERT INTO tickets (
-                ticket_id, full_name, email, mobile_number, illuminate_id,
-                password_hash, date_of_birth, qr_filename, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                ticket_id,
-                form["full-name"].strip(),
-                form["email"].strip(),
-                form["mobile-number"].strip(),
-                form["illuminate-id"].strip(),
-                hash_password(form["password"]),
-                date_of_birth,
-                qr_filename,
-                datetime.now(timezone.utc).isoformat(),
-            ),
+    try:
+        with get_connection() as connection:
+            connection.execute(
+                """
+                INSERT INTO tickets (
+                    ticket_id, full_name, email, mobile_number, illuminate_id,
+                    password_hash, date_of_birth, qr_filename, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    ticket_id,
+                    form["full-name"].strip(),
+                    form["email"].strip(),
+                    form["mobile-number"].strip(),
+                    form["illuminate-id"].strip(),
+                    hash_password(form["password"]),
+                    date_of_birth,
+                    qr_filename,
+                    datetime.now(timezone.utc).isoformat(),
+                ),
+            )
+    except sqlite3.IntegrityError:
+        (QR_DIRECTORY / qr_filename).unlink(missing_ok=True)
+        return redirect(
+            url_for(
+                "registration_page",
+                message="User details already exist, please try to sign in to access your QR code.",
+                message_type="warning",
+            )
         )
 
     return redirect(url_for("ticket_page", ticket_id=ticket_id))
