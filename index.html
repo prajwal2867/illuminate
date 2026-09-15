@@ -12,7 +12,7 @@
       <button class="modal-close" type="button" aria-label="Close registration">&times;</button>
       <h1 id="registration-title">Illuminate Registration</h1>
 
-      <form class="registration-form">
+      <form class="registration-form" action="/generate-ticket" method="post">
         <label class="field">
           <span>Full Name</span>
           <input type="text" name="full-name" autocomplete="name" required>
@@ -53,14 +53,49 @@
 
         <label class="field date-field">
           <span>Date of Birth</span>
-          <input type="date" name="date-of-birth" required>
+          <div class="date-input-shell">
+            <span class="date-mask" aria-hidden="true">DD / MM / YYYY</span>
+            <input id="date-of-birth" type="text" name="date-of-birth" inputmode="numeric" autocomplete="bday" maxlength="14" required aria-label="Date of Birth, day month year" placeholder="">
+          </div>
         </label>
 
-        <button class="register-button" type="submit">REGISTER</button>
+        <button class="register-button" type="submit">Verify and Generate E-Ticket</button>
       </form>
 
       <p class="signin-prompt">Already have an Illuminate ID? <a href="#signin">Sign in here</a></p>
     </section>
   </main>
+  <script>
+    const dateOfBirth = document.querySelector('#date-of-birth');
+    const dateMask = document.querySelector('.date-mask');
+
+    const updateDateMask = () => {
+      const digits = dateOfBirth.value.replace(/\D/g, '').slice(0, 8);
+      const dd = digits.slice(0, 2);
+      const mm = digits.slice(2, 4);
+      const yyyy = digits.slice(4, 8);
+
+      let formatted = dd;
+      if (digits.length > 2) formatted += ' / ' + mm;
+      if (digits.length > 4) formatted += ' / ' + yyyy;
+      if (dateOfBirth.value !== formatted) dateOfBirth.value = formatted;
+
+      const sections = [dd, mm, yyyy];
+      const placeholders = ['DD', 'MM', 'YYYY'];
+      dateMask.innerHTML = sections.map((section, index) => {
+        const remaining = placeholders[index].slice(section.length);
+        return `<span class="date-part date-part-${index + 1}"><span class="date-entered">${section}</span><span class="date-remaining">${remaining}</span></span>`;
+      }).join('<span class="date-separator"> / </span>');
+    };
+
+    dateOfBirth.addEventListener('input', updateDateMask);
+    updateDateMask();
+
+    dateOfBirth.addEventListener('keydown', (event) => {
+      if (!/[0-9]|Backspace|Delete|ArrowLeft|ArrowRight|Tab/.test(event.key)) {
+        event.preventDefault();
+      }
+    });
+  </script>
 </body>
 </html>

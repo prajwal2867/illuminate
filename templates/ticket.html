@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unique QR E-Ticket</title>
+  <link rel="stylesheet" href="{{ url_for('static_styles') }}">
+</head>
+<body>
+  <main class="page-shell ticket-page-shell">
+    <section class="ticket-card" role="main" aria-labelledby="ticket-title">
+      <button class="modal-close" type="button" aria-label="Close ticket" onclick="history.back()">&times;</button>
+      <h1 id="ticket-title">Unique QR E-Ticket</h1>
+      <img class="ticket-qr" src="{{ url_for('generated_qr', filename=ticket['qr_filename']) }}" alt="QR code for Illuminate ID {{ ticket['illuminate_id'] }}">
+      <p class="ticket-id">Your Illuminate ID: <strong>{{ ticket['illuminate_id'] }}</strong></p>
+      <a class="download-button" href="{{ url_for('generated_qr', filename=ticket['qr_filename']) }}" download="illuminate-{{ ticket['illuminate_id'] }}-qr.png">DOWNLOAD QR</a>
+    </section>
+  </main>
+</body>
+</html>

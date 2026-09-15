@@ -77,7 +77,7 @@ body {
   position: absolute;
   top: -7px;
   left: 13px;
-  z-index: 1;
+  z-index: 2;
   padding: 0 4px;
   background: #ffffff;
   color: #414141;
@@ -172,20 +172,57 @@ body {
   filter: grayscale(1);
 }
 
-.date-field input {
-  color: transparent;
+.date-input-shell {
+  position: relative;
 }
 
-.date-field input:focus,
-.date-field input:valid {
+.date-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  color: #b1b1b1;
+  font: inherit;
+  font-size: 16px;
+  letter-spacing: 1px;
+  white-space: pre;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.date-part {
+  display: inline;
+  flex: none;
+  white-space: pre;
+}
+
+.date-separator {
+  display: inline;
+  flex: none;
+  white-space: pre;
+}
+
+.date-entered {
   color: var(--text);
 }
 
-.date-field input::-webkit-calendar-picker-indicator {
-  width: 19px;
-  height: 19px;
-  opacity: 0.6;
-  cursor: pointer;
+.date-field input {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+  color: transparent;
+  caret-color: var(--text);
+}
+
+.date-field input:focus {
+  background: transparent;
 }
 
 .register-button {
@@ -215,6 +252,75 @@ body {
 .signin-prompt a {
   color: #626262;
   text-decoration: underline;
+}
+
+.ticket-page-shell {
+  padding: 28px 16px;
+}
+
+.ticket-card {
+  position: relative;
+  width: min(100%, 475px);
+  min-height: 575px;
+  padding: 42px 36px 54px;
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+  text-align: center;
+}
+
+.ticket-card h1 {
+  margin: 0 0 30px;
+  font-size: 25px;
+  line-height: 1.15;
+}
+
+.ticket-qr {
+  display: block;
+  width: 250px;
+  height: 250px;
+  margin: 0 auto 24px;
+  image-rendering: pixelated;
+}
+
+.ticket-id {
+  margin: 0 0 38px;
+  font-size: 25px;
+  line-height: 1.25;
+}
+
+.download-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 59px;
+  border-radius: 10px;
+  background: var(--blue);
+  color: #ffffff;
+  font-size: 21px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.download-button:hover {
+  background: #455d9f;
+}
+
+@media (max-width: 520px) {
+  .ticket-card {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+
+  .ticket-qr {
+    width: min(250px, 75vw);
+    height: min(250px, 75vw);
+  }
+
+  .ticket-id {
+    font-size: 20px;
+  }
 }
 
 @media (max-width: 520px) {
