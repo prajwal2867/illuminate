@@ -13,6 +13,23 @@ from flask import Flask, abort, redirect, render_template, request, send_from_di
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = BASE_DIR / "illuminate.db"
 QR_DIRECTORY = BASE_DIR / "generated_qr"
+ADMIN_CREDENTIALS = {
+    "satvi sumedha": "a0578",
+    "rupanjali": "a0483",
+    "akshaya": "a0575",
+    "umesh": "a05e9",
+    "hansini": "a67f3",
+    "anantha": "a0464",
+    "advika": "a05gu",
+    "srushti": "a6765",
+    "gopika": "a66g7",
+    "srishti": "a6653",
+    "joel": "a67c4",
+    "ali raza": "a66d0",
+    "deekshith": "a0439",
+    "sumanth": "a0541",
+    "prajwal": "a66j2",
+}
 
 app = Flask(__name__)
 QR_DIRECTORY.mkdir(exist_ok=True)
@@ -99,6 +116,23 @@ def india_flag():
 @app.get("/favicon.ico")
 def favicon():
     return "", 204
+
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    message = None
+
+    if request.method == "POST":
+        admin_name = " ".join(request.form.get("admin-name", "").split()).casefold()
+        admin_code = request.form.get("admin-code", "").strip().casefold()
+
+        if ADMIN_CREDENTIALS.get(admin_name) == admin_code:
+            display_name = " ".join(request.form["admin-name"].split())
+            return render_template("admin_dashboard.html", admin_name=display_name)
+
+        message = "The admin name or assigned code is incorrect, try again."
+
+    return render_template("admin_login.html", message=message)
 
 
 @app.post("/generate-ticket")

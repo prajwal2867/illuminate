@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Illuminate Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static_styles') }}">
+</head>
+<body>
+  <main class="page-shell signin-page-shell">
+    <section class="registration-card signin-card admin-card" role="main" aria-labelledby="admin-welcome-title">
+      <button class="modal-close" type="button" aria-label="Close admin page" onclick="window.location.href='/'">&times;</button>
+      <h1 id="admin-welcome-title">Illuminate Admin</h1>
+      <p class="admin-welcome">Welcome, <strong>{{ admin_name }}</strong></p>
+      <a class="register-button signin-button admin-home-button" href="{{ url_for('registration_page') }}">BACK TO HOMEPAGE</a>
+    </section>
+  </main>
+</body>
+</html>

@@ -266,6 +266,18 @@ body {
   text-decoration: underline;
 }
 
+.admin-prompt {
+  margin: 8px 0 0;
+  text-align: center;
+  color: #555555;
+  font-size: 14px;
+}
+
+.admin-prompt a {
+  color: #626262;
+  text-decoration: underline;
+}
+
 .signin-page-shell {
   padding: 28px 16px;
 }
@@ -305,6 +317,24 @@ body {
   min-height: 53px;
   padding: 12px 20px;
   line-height: 1.25;
+}
+
+.admin-card {
+  padding-bottom: 38px;
+}
+
+.admin-welcome {
+  margin: 0 0 28px;
+  color: #414141;
+  font-size: 17px;
+  text-align: center;
+}
+
+.admin-home-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .ticket-page-shell {

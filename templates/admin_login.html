@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Illuminate Admin Login</title>
+  <link rel="stylesheet" href="{{ url_for('static_styles') }}">
+</head>
+<body>
+  <main class="page-shell signin-page-shell">
+    <section class="registration-card signin-card admin-card" role="dialog" aria-modal="true" aria-labelledby="admin-title">
+      <button class="modal-close" type="button" aria-label="Close admin login" onclick="window.location.href='/'">&times;</button>
+      <h1 id="admin-title">Illuminate Admin Login</h1>
+
+      {% if message %}
+        <p class="signin-message error" role="alert">{{ message }}</p>
+      {% endif %}
+
+      <form class="registration-form" method="post" action="{{ url_for('admin_login') }}">
+        <label class="field">
+          <span>Admin Name</span>
+          <input type="text" name="admin-name" autocomplete="name" required>
+        </label>
+
+        <label class="field">
+          <span>Assigned Admin Code</span>
+          <input type="text" name="admin-code" autocomplete="off" required>
+        </label>
+
+        <button class="register-button signin-button" type="submit">LOGIN</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>
