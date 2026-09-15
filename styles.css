@@ -512,6 +512,40 @@ body {
   text-decoration: underline;
 }
 
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.row-action {
+  min-width: 66px;
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.accept-action,
+.remove-action {
+  background: var(--blue);
+}
+
+.accept-action:hover,
+.remove-action:hover {
+  background: #455d9f;
+}
+
+.row-action:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
 .empty-state {
   margin: 18px 0 0;
   color: #777777;

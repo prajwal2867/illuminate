@@ -155,6 +155,7 @@ def admin_login():
 
 def ticket_row_for_display(row: sqlite3.Row) -> dict:
     return {
+        "ticket_id": row["ticket_id"],
         "full_name": row["full_name"],
         "email": row["email"],
         "mobile_number": row["mobile_number"],
@@ -163,6 +164,53 @@ def ticket_row_for_display(row: sqlite3.Row) -> dict:
         "date_of_birth": row["date_of_birth"],
         "qr_filename": row["qr_filename"],
     }
+
+
+def move_ticket_to_attendees(connection: sqlite3.Connection, ticket: sqlite3.Row) -> None:
+    connection.execute(
+        """
+        INSERT INTO attendees (
+            ticket_id, full_name, email, mobile_number, illuminate_id,
+            password_hash, date_of_birth, qr_filename, created_at, scanned_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            ticket["ticket_id"], ticket["full_name"], ticket["email"],
+            ticket["mobile_number"], ticket["illuminate_id"], ticket["password_hash"],
+            ticket["date_of_birth"], ticket["qr_filename"], ticket["created_at"],
+            datetime.now(timezone.utc).isoformat(),
+        ),
+    )
+    connection.execute("DELETE FROM tickets WHERE ticket_id = ?", (ticket["ticket_id"],))
+
+
+@app.post("/admin/tickets/<ticket_id>/accept")
+def accept_ticket(ticket_id: str):
+    with get_connection() as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        ticket = connection.execute(
+            "SELECT * FROM tickets WHERE ticket_id = ?", (ticket_id,)
+        ).fetchone()
+        if ticket is None:
+            return {"success": False, "message": "This user is no longer in the active database."}, 404
+        move_ticket_to_attendees(connection, ticket)
+
+    return {"success": True, "message": "User accepted and moved to attendees."}
+
+
+@app.delete("/admin/tickets/<ticket_id>")
+def remove_ticket(ticket_id: str):
+    with get_connection() as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        ticket = connection.execute(
+            "SELECT qr_filename FROM tickets WHERE ticket_id = ?", (ticket_id,)
+        ).fetchone()
+        if ticket is None:
+            return {"success": False, "message": "This user is no longer in the active database."}, 404
+        connection.execute("DELETE FROM tickets WHERE ticket_id = ?", (ticket_id,))
+
+    (QR_DIRECTORY / ticket["qr_filename"]).unlink(missing_ok=True)
+    return {"success": True, "message": "User permanently removed."}
 
 
 @app.get("/admin/database")
@@ -217,20 +265,7 @@ def admin_scan():
             return {"success": False, "message": "QR code is not valid or has already been scanned."}, 404
 
         scanned_at = datetime.now(timezone.utc).isoformat()
-        connection.execute(
-            """
-            INSERT INTO attendees (
-                ticket_id, full_name, email, mobile_number, illuminate_id,
-                password_hash, date_of_birth, qr_filename, created_at, scanned_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                ticket["ticket_id"], ticket["full_name"], ticket["email"],
-                ticket["mobile_number"], ticket["illuminate_id"], ticket["password_hash"],
-                ticket["date_of_birth"], ticket["qr_filename"], ticket["created_at"], scanned_at,
-            ),
-        )
-        connection.execute("DELETE FROM tickets WHERE ticket_id = ?", (ticket_id,))
+        move_ticket_to_attendees(connection, ticket)
 
     return {"success": True, "message": "QR verified. User moved to attendees.", "record": ticket_row_for_display(ticket)}
 

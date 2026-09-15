@@ -56,6 +56,7 @@
               <th>Password</th>
               <th>Date of Birth</th>
               <th>Generated QR Code</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="database-rows"></tbody>
@@ -121,7 +122,7 @@
       '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;'
     }[character]));
 
-    const rowMarkup = (record) => `
+    const rowMarkup = (record, includeActions = false) => `
       <tr>
         <td>${escapeHtml(record.full_name)}</td>
         <td>${escapeHtml(record.email)}</td>
@@ -130,13 +131,14 @@
         <td><span class="protected-value">Protected</span></td>
         <td>${escapeHtml(record.date_of_birth)}</td>
         <td><a class="qr-link" href="/generated_qr/${encodeURIComponent(record.qr_filename)}" target="_blank">View QR</a></td>
+        ${includeActions ? `<td><div class="row-actions"><button class="row-action accept-action" type="button" data-action="accept" data-ticket-id="${escapeHtml(record.ticket_id)}">Accept</button><button class="row-action remove-action" type="button" data-action="remove" data-ticket-id="${escapeHtml(record.ticket_id)}">Remove</button></div></td>` : ''}
       </tr>`;
 
     const loadRecords = async (endpoint, rowsId, countId, emptyId) => {
       const response = await fetch(endpoint);
       const payload = await response.json();
       const rows = document.querySelector(`#${rowsId}`);
-      rows.innerHTML = payload.records.map(rowMarkup).join('');
+      rows.innerHTML = payload.records.map((record) => rowMarkup(record, rowsId === 'database-rows')).join('');
       document.querySelector(`#${countId}`).textContent = `${payload.records.length} record${payload.records.length === 1 ? '' : 's'}`;
       document.querySelector(`#${emptyId}`).hidden = payload.records.length !== 0;
     };
@@ -168,6 +170,23 @@
     tabs.forEach((tab) => tab.addEventListener('click', () => showView(tab.dataset.view)));
     document.querySelector('#database-filter').addEventListener('change', loadDatabase);
     document.querySelector('#database-search').addEventListener('input', loadDatabase);
+    document.querySelector('#database-rows').addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-action]');
+      if (!button) return;
+      const ticketId = encodeURIComponent(button.dataset.ticketId);
+      if (button.dataset.action === 'remove' && !window.confirm('Permanently remove this user?')) return;
+      button.disabled = true;
+      const endpoint = button.dataset.action === 'accept'
+        ? `/admin/tickets/${ticketId}/accept`
+        : `/admin/tickets/${ticketId}`;
+      const response = await fetch(endpoint, {
+        method: button.dataset.action === 'remove' ? 'DELETE' : 'POST'
+      });
+      const result = await response.json();
+      if (!result.success) window.alert(result.message);
+      await loadDatabase();
+      if (button.dataset.action === 'accept') await loadAttendees();
+    });
     loadDatabase();
     loadAttendees();
 
