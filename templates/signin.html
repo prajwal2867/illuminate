@@ -22,6 +22,19 @@
           <input type="text" name="full-name" autocomplete="name" required>
         </label>
 
+        <label class="field">
+          <span>Illuminate ID</span>
+          <input type="text" name="illuminate-id" required>
+        </label>
+
+        <label class="field date-field">
+          <span>Date of Birth</span>
+          <div class="date-input-shell">
+            <span class="date-mask" aria-hidden="true">DD / MM / YYYY</span>
+            <input id="signin-date-of-birth" type="text" name="date-of-birth" inputmode="numeric" maxlength="14" required aria-label="Date of Birth, day month year">
+          </div>
+        </label>
+
         <label class="field input-with-icon">
           <span>Password</span>
           <input type="password" name="password" autocomplete="current-password" required>
@@ -33,6 +46,37 @@
     </section>
   </main>
   <script>
+    const dateOfBirth = document.querySelector('#signin-date-of-birth');
+    const dateMask = document.querySelector('.date-mask');
+
+    const updateDateMask = () => {
+      const digits = dateOfBirth.value.replace(/\D/g, '').slice(0, 8);
+      const dd = digits.slice(0, 2);
+      const mm = digits.slice(2, 4);
+      const yyyy = digits.slice(4, 8);
+
+      let formatted = dd;
+      if (digits.length > 2) formatted += ' / ' + mm;
+      if (digits.length > 4) formatted += ' / ' + yyyy;
+      if (dateOfBirth.value !== formatted) dateOfBirth.value = formatted;
+
+      const sections = [dd, mm, yyyy];
+      const placeholders = ['DD', 'MM', 'YYYY'];
+      dateMask.innerHTML = sections.map((section, index) => {
+        const remaining = placeholders[index].slice(section.length);
+        return `<span class="date-part date-part-${index + 1}"><span class="date-entered">${section}</span><span class="date-remaining">${remaining}</span></span>`;
+      }).join('<span class="date-separator"> / </span>');
+    };
+
+    dateOfBirth.addEventListener('input', updateDateMask);
+    updateDateMask();
+
+    dateOfBirth.addEventListener('keydown', (event) => {
+      if (!/[0-9]|Backspace|Delete|ArrowLeft|ArrowRight|Tab/.test(event.key)) {
+        event.preventDefault();
+      }
+    });
+
     document.querySelector('.visibility-toggle').addEventListener('click', (event) => {
       const password = event.currentTarget.previousElementSibling;
       const isPassword = password.type === 'password';

@@ -153,6 +153,8 @@ def signin_page():
 
     if request.method == "POST":
         full_name = request.form.get("full-name", "").strip()
+        illuminate_id = request.form.get("illuminate-id", "").strip()
+        date_of_birth = normalize_date(request.form.get("date-of-birth", ""))
         password = request.form.get("password", "")
 
         with get_connection() as connection:
@@ -160,11 +162,13 @@ def signin_page():
                 """
                 SELECT ticket_id, password_hash
                 FROM tickets
-                WHERE lower(full_name) = lower(?)
+                                WHERE lower(full_name) = lower(?)
+                                    AND lower(illuminate_id) = lower(?)
+                                    AND date_of_birth = ?
                 ORDER BY id DESC
                 LIMIT 1
                 """,
-                (full_name,),
+                                (full_name, illuminate_id, date_of_birth or ""),
             ).fetchone()
 
         if ticket is None:
