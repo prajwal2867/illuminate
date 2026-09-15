@@ -139,7 +139,7 @@ def generate_ticket():
         return redirect(
             url_for(
                 "registration_page",
-                message="User details already exist, please try to sign in to access your QR code.",
+                message="Account already exists. Please sign in to view your QR code",
                 message_type="warning",
             )
         )
@@ -178,7 +178,7 @@ def generate_ticket():
         return redirect(
             url_for(
                 "registration_page",
-                message="User details already exist, please try to sign in to access your QR code.",
+                message="Account already exists. Please sign in to view your QR code",
                 message_type="warning",
             )
         )
