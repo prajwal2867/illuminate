@@ -1,3 +1,6 @@
 generated_qr/
 illuminate.db
 .txt
+.env
+.venv/
+__pycache__/
