@@ -4,3 +4,5 @@ illuminate.db
 .env
 .venv/
 __pycache__/
+
+notes/--1.txt
